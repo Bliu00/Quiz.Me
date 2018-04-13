@@ -13,16 +13,13 @@ namespace Quiz.me.Dialogs
     [Serializable]
     public class RootDialog : IDialog<object>
     {
+        int index, setSize;
+        List<QuizletCard> set;
+
         public Task StartAsync(IDialogContext context)
         {
-            context.Wait(MessageReceivedAsync);
-
-            return Task.CompletedTask;
-        }
-
-        private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
-        {
-            var reply = context.MakeMessage();
+            // Set index value
+            index = 0;
 
             // Get Specific Quizlet Set
             var myUri = new Uri("https://api.quizlet.com/2.0/sets/415/terms?client_id=zeSpVr8wzT&whitespace=1");
@@ -40,19 +37,50 @@ namespace Quiz.me.Dialogs
             var json = myStreamReader.ReadToEnd();
 
             // Put into QuizletCard Object
-            var data = JsonConvert.DeserializeObject<List<QuizletCard>>(json);
+            set = JsonConvert.DeserializeObject<List<QuizletCard>>(json);
+            setSize = set.Count;
+
             responseStream.Close();
             myWebResponse.Close();
 
-            // Add an InputHint to let Cortana know to expect user input
-            reply.Text = data[0].id; ;
-            reply.Speak = "This is the text that will be spoken.";
-            reply.InputHint = InputHints.IgnoringInput;
+            context.Wait(AskAsync);
+
+            return Task.CompletedTask;
+        }
+
+        private async Task AskAsync(IDialogContext context, IAwaitable<object> result)
+        {
+            var reply = context.MakeMessage();
+
+            if (index < setSize)
+            {
+                // Ask User about term
+                reply.Text = set[index].term;
+                reply.Speak = set[index].term;
+                reply.InputHint = InputHints.IgnoringInput;
+                await context.PostAsync(reply);
+                index++;
+            }
+          
+            // Listen for response
+            context.Wait(ResponseAsync);
+        }
+
+        private async Task ResponseAsync(IDialogContext context, IAwaitable<object> result)
+        {
+            var activity = await result as Activity;
+
+            // calculate something for us to return
+            int length = (activity.Text ?? string.Empty).Length;
 
             // return our reply to the user
-            await context.PostAsync(reply);
+            if((activity.Text.ToUpper()).Equals(set[index].definition.ToUpper())) {
+                await context.PostAsync($"Correct");
+            } else {
+                await context.PostAsync($"Incorrect");
+            }
 
-            context.Wait(MessageReceivedAsync);
+            context.Wait(AskAsync);
         }
     }
 }

@@ -1,5 +1,8 @@
-﻿namespace Quiz.me.Dialogs
+﻿using System;
+
+namespace Quiz.me.Dialogs
 {
+    [Serializable]
     public class QuizletCard
     {
         public string id { get; set; }
