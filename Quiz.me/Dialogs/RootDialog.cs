@@ -24,7 +24,7 @@ namespace Quiz.me.Dialogs
         {
             var reply = context.MakeMessage();
 
-            // Quizlet API
+            // Get Specific Quizlet Set
             var myUri = new Uri("https://api.quizlet.com/2.0/sets/415/terms?client_id=zeSpVr8wzT&whitespace=1");
             var myWebRequest = WebRequest.Create(myUri);
             var myHttpWebRequest = (HttpWebRequest)myWebRequest;
@@ -32,16 +32,17 @@ namespace Quiz.me.Dialogs
             myHttpWebRequest.Headers.Add("Authorization", "Bearer brkshEQjyE");
             myHttpWebRequest.Accept = "application/json";
 
+            // Parse JSON response 
             var myWebResponse = myWebRequest.GetResponse();
             var responseStream = myWebResponse.GetResponseStream();
             if (responseStream == null) Console.WriteLine("RESPONSE STREAM IS NULL");
-
             var myStreamReader = new StreamReader(responseStream, Encoding.Default);
             var json = myStreamReader.ReadToEnd();
+
+            // Put into QuizletCard Object
             var data = JsonConvert.DeserializeObject<List<QuizletCard>>(json);
             responseStream.Close();
             myWebResponse.Close();
-
 
             // Add an InputHint to let Cortana know to expect user input
             reply.Text = data[0].id; ;
