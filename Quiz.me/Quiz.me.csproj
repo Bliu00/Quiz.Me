@@ -113,7 +113,9 @@
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\MessagesController.cs" />
+    <Compile Include="Dialogs\Creator.cs" />
     <Compile Include="Dialogs\QuizletCard.cs" />
+    <Compile Include="Dialogs\QuizletSet.cs" />
     <Compile Include="Dialogs\RootDialog.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
