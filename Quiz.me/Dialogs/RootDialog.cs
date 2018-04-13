@@ -144,10 +144,8 @@ namespace Quiz.me.Dialogs
             if (index < cardCount && !(activity.Text.ToLower().Equals("exit")))
             {
                 // Ask User about term
-                var attachment = GetHeroCard(set[index], sets[currentSet].title, sets[currentSet].term_count);
-                reply.Attachments.Add(attachment);
-                //reply.Text = set[index].term;
-                //reply.Speak = set[index].term;
+                reply.Text = set[index].term;
+                reply.Speak = set[index].term;
                 reply.InputHint = InputHints.IgnoringInput;
                 await context.PostAsync(reply);
                 index++;
@@ -156,16 +154,42 @@ namespace Quiz.me.Dialogs
                 context.Wait(ResponseAsync);
            
             } else {
-                string correctF = Convert.ToString(correct);
-                string incorrectF = Convert.ToString(incorrect);
-                reply.Text = "You got "+ correctF + " questions correct and "+ incorrectF+" questions incorrect. Ending Q&A Session...";
-                reply.Speak = "You got " + correctF + " questions correct and " + incorrectF + " questions incorrect. Ending Q&A Session...";
+                total = ((double)correct / (double)(incorrect + correct)) * 100;
+                string totalF = Convert.ToString(total);
+
+                reply.Text = "You received a " + totalF + "% on this quiz";
+                reply.Speak = "You received a " + totalF + "% on this quiz";
                 reply.InputHint = InputHints.IgnoringInput;
+                await context.PostAsync(reply);
+
+                if (total > 90)
+                {
+                    reply.Text = "Excellent, you'll do great!";
+                    reply.Speak = "Excellent, you'll do great!";
+                    reply.InputHint = InputHints.IgnoringInput;
+                }
+                else if (total > 75)
+                {
+                    reply.Text = "Good job, but maybe you should practice a little more";
+                    reply.Speak = "Good job, but maybe you should practice a little more";
+                    reply.InputHint = InputHints.IgnoringInput;
+                }
+                else if (total > 50)
+                {
+                    reply.Text = "Hmm, why don't I quiz you again?";
+                    reply.Speak = "Hmm, why don't I quiz you again?";
+                    reply.InputHint = InputHints.IgnoringInput;
+                }
+                else
+                {
+                    reply.Text = "You're in bad shape, let's go again.";
+                    reply.Speak = "You're in bad shape, let's go again.";
+                    reply.InputHint = InputHints.IgnoringInput;
+                }
                 await context.PostAsync(reply);
 
                 context.Wait(GetUsername);
             }
-
         }
 
         private async Task ResponseAsync(IDialogContext context, IAwaitable<object> result)
