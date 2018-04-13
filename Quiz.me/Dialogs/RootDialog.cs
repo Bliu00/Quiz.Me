@@ -19,7 +19,7 @@ namespace Quiz.me.Dialogs
         int incorrect = 0;
         List<QuizletCard> set;
         List<QuizletSet> sets;
-
+        int currentSet = 0;
         public Task StartAsync(IDialogContext context)
         {
 
@@ -129,6 +129,7 @@ namespace Quiz.me.Dialogs
                 await context.PostAsync(reply);
 
                 set = sets[Convert.ToInt32(activity.Text)].terms;
+                currentSet = Convert.ToInt32(activity.Text);
                 cardCount = set.Count;
 
                 context.Wait(AskAsync);
@@ -143,8 +144,10 @@ namespace Quiz.me.Dialogs
             if (index < cardCount && !(activity.Text.ToLower().Equals("exit")))
             {
                 // Ask User about term
-                reply.Text = set[index].term;
-                reply.Speak = set[index].term;
+                var attachment = GetHeroCard(set[index], sets[currentSet].title, sets[currentSet].term_count);
+                reply.Attachments.Add(attachment);
+                //reply.Text = set[index].term;
+                //reply.Speak = set[index].term;
                 reply.InputHint = InputHints.IgnoringInput;
                 await context.PostAsync(reply);
                 index++;
@@ -188,6 +191,22 @@ namespace Quiz.me.Dialogs
                 incorrect = incorrect + 1;
                 context.Wait(AskAsync);
             }
+        }
+
+        private static Attachment GetHeroCard(QuizletCard card, String setName, int setSize)
+        {
+            int rankInteger = Convert.ToInt32(card.rank) + 1;
+            String rank = rankInteger + "/" + Convert.ToString(setSize);
+            
+            String term = card.term;
+            var heroCard = new HeroCard
+            {
+                Title = setName,
+                Subtitle = rank,
+                Text = term,
+                //Buttons = new List<CardAction> { new CardAction(ActionTypes.OpenUrl, "Get Started", value: "https://docs.microsoft.com/bot-framework") }
+            };
+            return heroCard.ToAttachment();
         }
     }
 }
