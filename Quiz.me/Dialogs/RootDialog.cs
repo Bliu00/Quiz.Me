@@ -15,6 +15,8 @@ namespace Quiz.me.Dialogs
     public class RootDialog : IDialog<object>
     {
         int index, cardCount, totalSets;
+        int correct = 0;
+        int incorrect = 0;
         List<QuizletCard> set;
         List<QuizletSet> sets;
 
@@ -149,9 +151,12 @@ namespace Quiz.me.Dialogs
 
                 // Listen for response
                 context.Wait(ResponseAsync);
+           
             } else {
-                reply.Text = "Ending Q&A Session...";
-                reply.Speak = "Ending Q&A Session...";
+                string correctF = Convert.ToString(correct);
+                string incorrectF = Convert.ToString(incorrect);
+                reply.Text = "You got "+ correctF + " questions correct and "+ incorrectF+" questions incorrect. Ending Q&A Session...";
+                reply.Speak = "You got " + correctF + " questions correct and " + incorrectF + " questions incorrect. Ending Q&A Session...";
                 reply.InputHint = InputHints.IgnoringInput;
                 await context.PostAsync(reply);
 
@@ -174,56 +179,15 @@ namespace Quiz.me.Dialogs
                 await context.PostAsync(reply);
 
                 context.Wait(GetUsername);
-            } else if ((activity.Text.ToUpper()).Equals(set[index].definition.ToUpper())) {
+            } else if ((activity.Text.ToUpper()).Equals(set[index-1].definition.ToUpper())) {
                 await context.PostAsync($"Correct");
+                correct = correct + 1;
                 context.Wait(AskAsync);
             } else {
-                await context.PostAsync($"Incorrect, definition is: " + set[index].definition);
+                await context.PostAsync($"Incorrect, definition is: " + set[index-1].definition);
+                incorrect = incorrect + 1;
                 context.Wait(AskAsync);
             }
         }
     }
 }
-/*
- * 
- *             reply.AttachmentLayout = AttachmentLayoutTypes.Carousel;
-            reply.Attachments = new List<Attachment>();
-            var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
-
-            Dictionary<string, string> cardContentList = new Dictionary<string, string>();
-            cardContentList.Add("PigLatin", "https://loremflickr.com/320/240");
-            cardContentList.Add("Pork Shoulder", "https://loremflickr.com/320/240");
-            cardContentList.Add("Bacon", "https://loremflickr.com/320/240");
-
-            foreach (KeyValuePair<string, string> cardContent in cardContentList)
-            {
-                List<CardImage> cardImages = new List<CardImage>();
-                cardImages.Add(new CardImage(url: cardContent.Value));
-
-                List<CardAction> cardButtons = new List<CardAction>();
-
-                CardAction plButton = new CardAction()
-                {
-                    Value = $"https://en.wikipedia.org/wiki/{cardContent.Key}",
-                    Type = "openUrl",
-                    Title = "WikiPedia Page"
-                };
-
-                cardButtons.Add(plButton);
-
-                HeroCard plCard = new HeroCard()
-                {
-                    Title = $"I'm a hero card about {cardContent.Key}",
-                    Subtitle = $"{cardContent.Key} Wikipedia Page",
-                    Images = cardImages,
-                    Buttons = cardButtons
-                };
-
-                Attachment plAttachment = plCard.ToAttachment();
-                reply.Attachments.Add(plAttachment);
-            }
-
-            await connector.Conversations.SendToConversationAsync(reply);
-
-
-*/
